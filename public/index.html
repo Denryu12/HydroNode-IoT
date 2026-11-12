@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HydroNode Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Glassmorphic Container */
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            width: 350px;
+        }
+
+        h2 { margin-top: 0; font-weight: 400; }
+
+        /* Visual Water Tank */
+        .tank-container {
+            width: 140px;
+            height: 300px;
+            border: 4px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px 10px 20px 20px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .water-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%; /* This gets updated by JS */
+            background: linear-gradient(to top, #00c6ff, #0072ff);
+            transition: height 1s ease-in-out;
+        }
+
+        .percentage {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .timestamp {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-card">
+        <h2>HydroNode Live Status</h2>
+        
+        <div class="tank-container">
+            <div class="water-fill" id="waterFill"></div>
+        </div>
+
+        <div class="percentage" id="percentageText">--%</div>
+        <div class="timestamp" id="lastUpdated">Waiting for data...</div>
+    </div>
+
+    <script>
+        // Function to fetch the latest water level from your backend API
+        async function fetchWaterLevel() {
+            try {
+                const response = await fetch('/api/water-level');
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const latestReading = data[0]; // Gets the most recent row
+                    const level = latestReading.water_percentage;
+                    const time = new Date(latestReading.recorded_at).toLocaleTimeString();
+
+                    // Update the UI
+                    document.getElementById('waterFill').style.height = level + '%';
+                    document.getElementById('percentageText').innerText = level + '%';
+                    document.getElementById('lastUpdated').innerText = 'Last updated: ' + time;
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('lastUpdated').innerText = 'Connection error';
+            }
+        }
+
+        // Fetch immediately on load, then every 2 seconds
+        fetchWaterLevel();
+        setInterval(fetchWaterLevel, 2000);
+    </script>
+
+</body>
+</html>
